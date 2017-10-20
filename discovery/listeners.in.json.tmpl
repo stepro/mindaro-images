@@ -1,0 +1,47 @@
+{{- $podIP := .status.podIP -}}
+{{- range .spec.containers -}}
+{{- range .ports }}        {
+            "name": "{{ $podIP }}:{{ .containerPort }}",
+            "address": "tcp://{{ $podIP }}:{{ .containerPort }}",
+            "bind_to_port": false,
+            "filters": [
+                {
+                    "type": "read",
+                    "name": "http_connection_manager",
+                    "config": {
+                        "codec_type": "auto",
+                        "stat_prefix": "http",
+                        "route_config": {
+                            "virtual_hosts": [
+                                {
+                                    "name": "in.80",
+                                    "domains": [
+                                        "*"
+                                    ],
+                                    "routes": [
+                                        {
+                                            "prefix": "/",
+                                            "cluster": "in.80"
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        "filters": [
+                            {
+                                "type": "decoder",
+                                "name": "router",
+                                "config": {}
+                            }
+                        ],
+                        "access_log": [
+                            {
+                                "path": "/dev/stdout"
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+{{ end -}}
+{{ end -}}
