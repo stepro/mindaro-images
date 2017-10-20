@@ -14,14 +14,14 @@
                         "route_config": {
                             "virtual_hosts": [
                                 {
-                                    "name": "in.80",
+                                    "name": "in.{{ .containerPort }}",
                                     "domains": [
                                         "*"
                                     ],
                                     "routes": [
                                         {
                                             "prefix": "/",
-                                            "cluster": "in.80"
+                                            "cluster": "in.{{ .containerPort }}"
                                         }
                                     ]
                                 }
