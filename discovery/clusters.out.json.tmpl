@@ -1,7 +1,8 @@
-{{ range .items -}}
-{{- $metadata := .metadata -}}
-{{- $clusterIP := .spec.clusterIP -}}
-{{- range .spec.ports }}        {
+{{- range .items }}
+{{- $metadata := .metadata }}
+{{- $clusterIP := .spec.clusterIP }}
+{{- range .spec.ports }},
+        {
             "name": "out.{{ $metadata.namespace }}.{{ $metadata.name }}.{{ .port }}",
             "type": "static",
             "lb_type": "round_robin",
@@ -11,6 +12,6 @@
                     "url": "tcp://{{ $clusterIP }}:{{ .port }}"
                 }
             ]
-        },
-{{ end -}}
-{{ end }}
+        }
+{{- end }}
+{{- end }}

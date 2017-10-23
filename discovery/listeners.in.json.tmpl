@@ -1,12 +1,12 @@
-{{- $podIP := .status.podIP -}}
-{{- range .spec.containers -}}
-{{- range .ports }}        {
+{{- $podIP := .status.podIP }}
+{{- range .spec.containers }}
+{{- range .ports }},
+        {
             "name": "{{ $podIP }}:{{ .containerPort }}",
             "address": "tcp://{{ $podIP }}:{{ .containerPort }}",
             "bind_to_port": false,
             "filters": [
                 {
-                    "type": "read",
                     "name": "http_connection_manager",
                     "config": {
                         "codec_type": "auto",
@@ -29,11 +29,13 @@
                         },
                         "filters": [
                             {
-                                "type": "decoder",
                                 "name": "router",
                                 "config": {}
                             }
                         ],
+                        "tracing": {
+                            "operation_name": "ingress"
+                        },
                         "access_log": [
                             {
                                 "path": "/dev/stdout"
@@ -42,6 +44,6 @@
                     }
                 }
             ]
-        },
-{{ end -}}
-{{ end -}}
+        }
+{{- end }}
+{{- end }}

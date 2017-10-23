@@ -10,34 +10,21 @@ cd /usr/share/nginx
 cat << EOF > listeners.json.tmpl
 {
     "listeners": [
-$(kubectl get pod $POD_NAME -o go-template-file=listeners.in.json.tmpl)
-$(cat listeners.out.json.tmpl)
         {
             "name": "0.0.0.0:15001",
             "address": "tcp://0.0.0.0:15001",
-            "use_original_dst": true,
-            "filters": []
-        }
+            "filters": [],
+            "use_original_dst": true
+        }$(kubectl get pod $POD_NAME -o go-template-file=listeners.in.json.tmpl)
+$(cat listeners.out.json.tmpl)
     ]
 }
 EOF
 
 cat << EOF > clusters.json.tmpl
 {
-    "clusters": [
-$(kubectl get pod $POD_NAME -o go-template-file=clusters.in.json.tmpl)
+    "clusters": [$(kubectl get pod $POD_NAME -o go-template-file=clusters.in.json.tmpl)
 $(cat clusters.out.json.tmpl)
-        {
-            "name": "in.15000",
-            "type": "static",
-            "lb_type": "round_robin",
-            "connect_timeout_ms": 1000,
-            "hosts": [
-                {
-                    "url": "tcp://127.0.0.1:15000"
-                }
-            ]
-        }
     ]
 }
 EOF

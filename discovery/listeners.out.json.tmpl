@@ -1,15 +1,15 @@
-{{ $services := .items -}}
-{{- range $services -}}
-{{- $metadata := .metadata -}}
-{{- $clusterIP := .spec.clusterIP -}}
-{{- range .spec.ports -}}
-{{- $port := .port }}        {
+{{- $services := .items }}
+{{- range $services }}
+{{- $metadata := .metadata }}
+{{- $clusterIP := .spec.clusterIP }}
+{{- range .spec.ports }}
+{{- $port := .port }},
+        {
             "name": "{{ $clusterIP }}:{{ $port }}",
             "address": "tcp://{{ $clusterIP }}:{{ $port }}",
             "bind_to_port": false,
             "filters": [
                 {
-                    "type": "read",
                     "name": "http_connection_manager",
                     "config": {
                         "codec_type": "auto",
@@ -19,17 +19,15 @@
                                 {
                                     "name": "out.{{ $metadata.namespace }}.{{ $metadata.name }}.{{ $port }}",
                                     "domains": [
-                                        "{{ $metadata.name }}",
-                                        "{{ $metadata.name }}.{{ $metadata.namespace }}",
-                                        "{{ $metadata.name }}.{{ $metadata.namespace }}.svc",
-                                        "{{ $metadata.name }}.{{ $metadata.namespace }}.svc.cluster.local"
+                                        "*"
                                     ],
                                     "routes": [
-{{ range $services -}}
-{{- if eq .metadata.name $metadata.name -}}
-{{- $namespace := .metadata.namespace -}}
-{{- range .spec.ports -}}
-{{- if eq .port $port }}                                        {
+{{- range $services }}
+{{- if eq .metadata.name $metadata.name }}
+{{- $namespace := .metadata.namespace }}
+{{- range .spec.ports }}
+{{- if eq .port $port }}
+                                        {
                                             "headers": [
                                                 {
                                                     "name": "x-k8s-namespace",
@@ -39,10 +37,10 @@
                                             "prefix": "/",
                                             "cluster": "out.{{ $namespace }}.{{ $metadata.name }}.{{ $port }}"
                                         },
-{{ end -}}
-{{ end -}}
-{{ end -}}
-{{ end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
                                         {
                                             "prefix": "/",
                                             "cluster": "out.{{ $metadata.namespace }}.{{ $metadata.name }}.{{ $port }}"
@@ -58,6 +56,9 @@
                                 "config": {}
                             }
                         ],
+                        "tracing": {
+                            "operation_name": "egress"
+                        },
                         "access_log": [
                             {
                                 "path": "/dev/stdout"
@@ -66,6 +67,6 @@
                     }
                 }
             ]
-        },
-{{ end -}}
-{{ end }}
+        }
+{{- end }}
+{{- end }}
