@@ -1,0 +1,4 @@
+apiVersion: v1
+name: mindaro-ingress
+description: Helm chart for the Mindaro ingress service
+version: 0.1.0

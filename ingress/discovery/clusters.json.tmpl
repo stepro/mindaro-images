@@ -5,7 +5,7 @@
 {{- $clusterIP := $service.spec.clusterIP }}
 {{- range $j, $port := $service.spec.ports }}{{ if or $i $j }},{{ end }}
         {
-            "name": "{{ $metadata.namespace }}.{{ $metadata.name }}.{{ $port.port }}",
+            "name": "{{ $metadata.name }}.{{ $metadata.namespace }}:{{ $port.port }}",
             "type": "static",
             "lb_type": "round_robin",
             "connect_timeout_ms": 1000,

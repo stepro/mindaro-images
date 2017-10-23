@@ -1,0 +1,66 @@
+{
+    "admin": {
+        "address": "tcp://0.0.0.0:15000",
+        "access_log_path": "/dev/stdout"
+    },
+    "listeners": [
+        {
+            "name": "0.0.0.0:80",
+            "address": "tcp://0.0.0.0:80",
+            "filters": [
+                {
+                    "name": "http_connection_manager",
+                    "config": {
+                        "codec_type": "auto",
+                        "stat_prefix": "http",
+                        "route_config": {
+                            "virtual_hosts": [
+                                {
+                                    "name": "ingress",
+                                    "domains": [
+                                        "*"
+                                    ],
+                                    "routes": [
+                                        {
+                                            "prefix": "/",
+                                            "cluster_header": "x-envoy-cluster"
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        "filters": [
+                            {
+                                "type": "decoder",
+                                "name": "router",
+                                "config": {}
+                            }
+                        ],
+                        "access_log": [
+                            {
+                                "path": "/dev/stdout"
+                            }
+                        ]
+                    }
+                }
+            ]
+        }        
+    ],
+    "cluster_manager": {
+        "clusters": [],
+        "cds": {
+            "cluster": {
+                "name": "cds",
+                "type": "static",
+                "lb_type": "round_robin",
+                "connect_timeout_ms": 1000,
+                "hosts": [
+                    {
+                        "url": "tcp://127.0.0.1:15002"
+                    }
+                ]
+            },
+            "refresh_delay_ms": 2500
+        }
+    }
+}
