@@ -4,15 +4,8 @@ if [ -z "$POD_NAME" ]; then
   echo >&2 error: must specify POD_NAME environment variable
   exit 1
 fi
-
-TARGET_CONTAINER=$(kubectl get pod $POD_NAME -o go-template='{{ index .metadata.labels "mindaro.io/target-container" }}')
-if [ "$TARGET_CONTAINER" == "<no value>" ]; then
-  TARGET_CONTAINER=
-fi
-
-SYNC_TARGET=$(kubectl get pod $POD_NAME -o go-template='{{ index .metadata.annotations "mindaro.io/sync-target" }}')
-if [ "$SYNC_TARGET" == "<no value>" ]; then
-  SYNC_TARGET=
+if [ -z "$TARGET_CONTAINER" ]; then
+  echo >&2 error: must specify TARGET_CONTAINER environment variable
 fi
 
 if [ -n "$TARGET_CONTAINER" -a -z "$SYNC_TARGET" ]; then
