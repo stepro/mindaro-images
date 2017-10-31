@@ -1,4 +1,5 @@
 #!/bin/sh
+set -e
 
 if [ -z "$POD_NAME" ]; then
   echo >&2 error: must specify POD_NAME environment variable
@@ -21,14 +22,16 @@ iptables -t nat -N ENVOY_REDIRECT \
 iptables -t nat -A ENVOY_REDIRECT -p tcp -j REDIRECT --to-port $ENVOY_PORT \
   -m comment --comment "envoy/redirect-to-envoy"
 
-# Determine the set of HTTP ports to redirect through Envoy
-HTTP_PORTS=$(echo $(kubectl get pod $POD_NAME -o go-template='{{range .spec.containers}}{{range .ports}}{{if eq .protocol "TCP"}}{{.containerPort}} {{end}}{{end}}{{end}}'))
-# TODO: do not redirect specified ports through Envoy  
-# if [ -n "$NON_HTTP_PORTS" ]; then
-# fi
-
-# Redirect inbound traffic on HTTP ports through Envoy
-if [ -n "$HTTP_PORTS" ]; then
+# Redirect inbound traffic on determined HTTP ports through Envoy
+HTTP_PORTS=$(kubectl get pod $POD_NAME -o go-template=' {{range .spec.containers}}{{range .ports}}{{if eq .protocol "TCP"}}{{.containerPort}} {{end}}{{end}}{{end}}')
+if [ ${#HTTP_PORTS} -gt 1 ]; then
+  if [ -n "$NON_HTTP_PORTS" ]; then
+    for p in $NON_HTTP_PORTS; do
+      HTTP_PORTS=${HTTP_PORTS// $p /}
+    done
+  fi
+  HTTP_PORTS=$(echo $HTTP_PORTS) # trim
+  HTTP_PORTS=${HTTP_PORTS// /,}
   iptables -t nat -A PREROUTING -p tcp -m multiport --dports "$HTTP_PORTS" -j ENVOY_REDIRECT \
     -m comment --comment "envoy/redirect-inbound-http"
 fi

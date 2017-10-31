@@ -14,7 +14,7 @@ if [ -n "$TARGET_CONTAINER" -a -z "$SYNC_TARGET" ]; then
     if [ "$READY" == "true" ]; then
       break
     fi
-    echo info: waiting for target container readiness...
+    echo info: waiting for target container...
     sleep 1
   done
   HAS_FIND=$(kubectl exec 2>/dev/null $POD_NAME -c $TARGET_CONTAINER -- which find)
