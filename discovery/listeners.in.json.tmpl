@@ -1,3 +1,4 @@
+{{/* TODO: do not include non-HTTP ports */}}
 {{- $podIP := .status.podIP }}
 {{- range .spec.containers }}
 {{- range .ports }},

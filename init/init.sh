@@ -1,12 +1,17 @@
 #!/bin/sh
 
-# Configure baseline namespace if supplied
-if [ -n "$BASELINE" ]; then
-  sed 's/ svc.cluster.local / '$BASELINE'.svc.cluster.local svc.cluster.local /' /etc/resolv.conf > /etc/resolv.conf.new
+if [ -z "$POD_NAME" ]; then
+  echo >&2 error: must specify POD_NAME environment variable
+  exit 1
+fi
+
+# Configure baseline namespace
+if [ -n "$BASELINE_NAMESPACE" ]; then
+  sed 's/ svc.cluster.local / '$BASELINE_NAMESPACE'.svc.cluster.local svc.cluster.local /' /etc/resolv.conf > /etc/resolv.conf.new
   cat /etc/resolv.conf.new > /etc/resolv.conf
 fi
 
-# Ensure Envoy configuration
+# Gather Envoy configuration settings
 ENVOY_PORT=${ENVOY_PORT:-15001}
 ENVOY_UID=${ENVOY_UID:-1337}
 
@@ -16,7 +21,13 @@ iptables -t nat -N ENVOY_REDIRECT \
 iptables -t nat -A ENVOY_REDIRECT -p tcp -j REDIRECT --to-port $ENVOY_PORT \
   -m comment --comment "envoy/redirect-to-envoy"
 
-# Redirect inbound traffic on specified HTTP ports through Envoy
+# Determine the set of HTTP ports to redirect through Envoy
+HTTP_PORTS=$(echo $(kubectl get pod $POD_NAME -o go-template='{{range .spec.containers}}{{range .ports}}{{if eq .protocol "TCP"}}{{.containerPort}} {{end}}{{end}}{{end}}'))
+# TODO: do not redirect specified ports through Envoy  
+# if [ -n "$NON_HTTP_PORTS" ]; then
+# fi
+
+# Redirect inbound traffic on HTTP ports through Envoy
 if [ -n "$HTTP_PORTS" ]; then
   iptables -t nat -A PREROUTING -p tcp -m multiport --dports "$HTTP_PORTS" -j ENVOY_REDIRECT \
     -m comment --comment "envoy/redirect-inbound-http"
